@@ -127,14 +127,25 @@ class Enemy:
 
 
 class Obstacle:
-    """プレイヤーの行く手を阻む障害物クラス（破壊不可）"""
+    """
+    プレイヤーの行く手を阻む障害物クラス（破壊は不可）
+    x (float): 障害物の左上X座標
+    y (float): 障害物の左上Y座標
+    size (int): 障害物の一辺の長さ（正方形）
+    """
     def __init__(self, x, y, size=60):
         self.x = x
         self.y = y
         self.size = size
 
     def check_collision(self, player):
-        """プレイヤーとの衝突判定。敵の処理をベースにHP減少だけを除外"""
+        """
+        プレイヤーとの衝突判定。敵の処理をベースにHP減少だけを除外
+        プレイヤーキャラクターとの衝突判定を行い、
+        衝突時にはプレイヤーの位置の押し戻しと速度の反転（バウンド）処理を行う
+        この障害物は破壊不可
+        衝突した場合は True、衝突していない場合は False
+        """
         if (self.x < player.x + player.size and 
             player.x < self.x + self.size and
             self.y < player.y + player.size and 
@@ -185,7 +196,7 @@ class GameUI:
         """スタート画面の描画"""
         screen.blit(self.start_bg_img, (0, 0))
         
-        title_text = self.title_font.render("簡易モンスト", True, STAGE_BORDER)
+        title_text = self.title_font.render("ヤマダストライク", True, STAGE_BORDER)
         title_rect = title_text.get_rect(center=(WIDTH // 2, HEIGHT // 3))
         screen.blit(title_text, title_rect)
         
