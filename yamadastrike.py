@@ -126,6 +126,32 @@ class Enemy:
         screen.blit(hp_text, (self.x, self.y - 18))
 
 
+class item:
+    """
+    アイテムに関してのクラス(追加機能)
+    """
+    def __init__(self, image, x, y):
+        self.image = image
+        self.x = x
+        self.y = y
+        self.is_used = False
+    
+    def use(self, game_instance):
+        """アイテムを使用し、ゲームのターン数を1増やす"""
+        if not self.is_used:
+            game_instance.left_turns += 1
+            self.is_used = True
+            return True
+        return False
+    
+    def draw(self, screen):
+        """未使用の場合のみ画面に描画"""
+        if not self.is_used:
+            screen.blit(self.image, (self.x, self.y))
+    
+        
+
+
 class GameUI:
     """背景、枠、文字などの描画（UI）全般を専門に行うクラス"""
     def __init__(self):
@@ -146,7 +172,7 @@ class GameUI:
         """スタート画面の描画"""
         screen.blit(self.start_bg_img, (0, 0))
         
-        title_text = self.title_font.render("簡易モンスト", True, STAGE_BORDER)
+        title_text = self.title_font.render("ヤマダストライク", True, STAGE_BORDER)
         title_rect = title_text.get_rect(center=(WIDTH // 2, HEIGHT // 3))
         screen.blit(title_text, title_rect)
         
@@ -229,7 +255,8 @@ class Game:
             pg.transform.scale(pg.image.load("enemy1.png").convert_alpha(), (70, 70)),
             pg.transform.scale(pg.image.load("enemy1.png").convert_alpha(), (70, 70))
         ]
-
+        # 追加機能変更点アイテム画像の読み込み 
+        self.item_image = pg.transform.scale(pg.image.load("item.jpeg").convert_alpha(), (50, 50))
         self.game_state = "START"
         self.running = True
         self.reset_game()
@@ -243,7 +270,8 @@ class Game:
         ]
         self.enemies = []
         self._spawn_enemies()
-        
+        # 追加機能変更点　ゲームリセット時にアイテムのインスタンスを作成（画面右下に位置するように）
+        self.game_item = item(self.item_image, 380, 645)
         self.current_turn = 0
         self.is_dragging = False
         self.left_turns = 9
@@ -277,6 +305,11 @@ class Game:
             
             # --- プレイ中のイベント処理 ---
             elif self.game_state == "PLAY":
+                # 追加機能変更点スペースキーが押されたらアイテムを使う
+                if event.type == pg.KEYDOWN:
+                    if event.key == pg.K_SPACE:
+                        self.game_item.use(self)
+
                 # 引っ張り開始判定
                 if event.type == pg.MOUSEBUTTONDOWN and not anyone_moving:
                     if p.x <= mouse_pos[0] <= p.x + p.size and p.y <= mouse_pos[1] <= p.y + p.size:
@@ -342,6 +375,9 @@ class Game:
             self.ui.draw_bottom_ui_icons(
                 self.screen, self.chara_images, self.current_turn, anyone_moving, self.game_state
             )
+
+            # 追加機能変更点　アイテムを画面に描画（UIレイヤーの上、プレイヤーの下あたり）
+            self.game_item.draw(self.screen)
             
             for player in self.players:
                 player.draw(self.screen)
