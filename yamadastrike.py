@@ -19,7 +19,7 @@ HP_TEXT_COLOR = (255, 50, 50)
 TEXT_WHITE = (255, 255, 255)
 BUTTON_COLOR = (50, 150, 250)
 BUTTON_HOVER_COLOR = (80, 180, 255)
-
+OBSTACLE_COLOR = (120, 120, 120)
 
 class Player:
     """プレイヤーキャラクターの移動や状態を管理するクラス"""
@@ -124,6 +124,45 @@ class Enemy:
         screen.blit(self.image, (self.x, self.y))
         hp_text = hp_font.render(f"HP: {self.hp}", True, HP_TEXT_COLOR)
         screen.blit(hp_text, (self.x, self.y - 18))
+
+
+class Obstacle:
+    """プレイヤーの行く手を阻む障害物クラス（破壊不可）"""
+    def __init__(self, x, y, size=60):
+        self.x = x
+        self.y = y
+        self.size = size
+
+    def check_collision(self, player):
+        """プレイヤーとの衝突判定。敵の処理をベースにHP減少だけを除外"""
+        if (self.x < player.x + player.size and 
+            player.x < self.x + self.size and
+            self.y < player.y + player.size and 
+            player.y < self.y + self.size):
+            
+            # X方向の衝突応答
+            if player.vx > 0 and player.x + player.size - player.vx <= self.x:
+                player.x = self.x - player.size
+                player.vx *= -0.9
+            elif player.vx < 0 and player.x - player.vx >= self.x + self.size:
+                player.x = self.x + self.size
+                player.vx *= -0.9
+
+            # Y方向の衝突応答
+            if player.vy > 0 and player.y + player.size - player.vy <= self.y:
+                player.y = self.y - player.size
+                player.vy *= -0.9
+            elif player.vy < 0 and player.y - player.vy >= self.y + self.size:
+                player.y = self.y + self.size
+                player.vy *= -0.9
+                
+            return True
+        return False
+
+    def draw(self, screen):
+        """障害物の描画（今回はシンプルな四角形として描画。画像にする場合は blit に変更可能）"""
+        pg.draw.rect(screen, OBSTACLE_COLOR, (self.x, self.y, self.size, self.size), border_radius=5)
+        pg.draw.rect(screen, TEXT_WHITE, (self.x, self.y, self.size, self.size), 2, border_radius=5)
 
 
 class GameUI:
@@ -243,7 +282,8 @@ class Game:
         ]
         self.enemies = []
         self._spawn_enemies()
-        
+        self.obstacles = []
+        self.turn_counter = 0
         self.current_turn = 0
         self.is_dragging = False
         self.left_turns = 9
@@ -257,6 +297,12 @@ class Game:
             y = random.randint(50, 450)
             img = self.enemy_images[enemy_type]
             self.enemies.append(Enemy(x, y, enemy_type, img))
+
+    def _spawn_obstacle(self):
+        """ランダムな位置に障害物を1つ生成する"""
+        x = random.randint(30, WIDTH - 80)
+        y = random.randint(50, 450)
+        self.obstacles.append(Obstacle(x, y))
 
     def handle_events(self):
         """マウス操作などのイベント受付処理"""
@@ -316,11 +362,18 @@ class Game:
                     if enemy.check_collision(player):
                         if enemy.hp <= 0:
                             self.enemies.remove(enemy)
+                for obstacle in self.obstacles:
+                    obstacle.check_collision(player)
 
             # 「このフレームでちょうど止まった」瞬間の判定
             if was_moving and not player.is_moving:
                 if len(self.enemies) > 0:
                     self.left_turns -= 1
+                    self.turn_counter += 1
+                    if self.turn_counter >= 3:
+                        self._spawn_obstacle()
+                        self.turn_counter = 0 # カウンターをリセット
+                
                     if self.left_turns <= 0:
                         self.game_state = "GAMEOVER"
 
@@ -337,7 +390,10 @@ class Game:
             
             for enemy in self.enemies:
                 enemy.draw(self.screen, self.ui.hp_font)
-                
+            
+            for obstacle in self.obstacles:
+                obstacle.draw(self.screen)
+
             anyone_moving = any(pl.is_moving for pl in self.players)
             self.ui.draw_bottom_ui_icons(
                 self.screen, self.chara_images, self.current_turn, anyone_moving, self.game_state
