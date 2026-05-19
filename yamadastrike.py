@@ -3,10 +3,9 @@ import os
 import random
 import sys
 import pygame as pg
-from typing import List, Tuple, Optional  # 型ヒント用のインポート
 
-WIDTH: int = 450  # ゲームウィンドウの幅
-HEIGHT: int = 800  # ゲームウィンドウの高さ
+WIDTH = 450  # ゲームウィンドウの幅
+HEIGHT = 800  # ゲームウィンドウの高さ
 
 try:
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
@@ -14,13 +13,13 @@ except:
     pass
 
 # --- カラー定義 ---
-STAGE_BORDER: Tuple[int, int, int] = (255, 215, 0)
-LINE_COLOR: Tuple[int, int, int] = (255, 0, 0)
-SS_LINE_COLOR: Tuple[int, int, int] = (255, 215, 0)
-HP_TEXT_COLOR: Tuple[int, int, int] = (255, 50, 50)
-TEXT_WHITE: Tuple[int, int, int] = (255, 255, 255)
-BUTTON_COLOR: Tuple[int, int, int] = (50, 150, 250)
-BUTTON_HOVER_COLOR: Tuple[int, int, int] = (80, 180, 255)
+STAGE_BORDER = (255, 215, 0)
+LINE_COLOR = (255, 0, 0)
+SS_LINE_COLOR = (255, 215, 0)
+HP_TEXT_COLOR = (255, 50, 50)
+TEXT_WHITE = (255, 255, 255)
+BUTTON_COLOR = (50, 150, 250)
+BUTTON_HOVER_COLOR = (80, 180, 255)
 
 
 class StrikeShotManager:
@@ -33,14 +32,14 @@ class StrikeShotManager:
         requirement (int): SS発動に必要な敵の撃破数。
         killed_count (int): 現在のステージにおける敵の累計撃破数。
         is_ready (bool): SSが発動可能な状態かを表すフラグ。
-        font (pg.font.Font): SS状況を画面に描画するためのオブジェクト。
+        font (pg.font.Font): SS状況を画面に描画するためのフォントオブジェクト。
     """
     
     def __init__(self, requirement: int = 3) -> None:
         """StrikeShotManagerを初期化する。
 
         Args:
-            requirement (int, optional): SS発動に必要な撃破数。デフォルトは3。
+            requirement (int): SS発動に必要な撃破数。デフォルトは3。
         """
         self.requirement: int = requirement
         self.killed_count: int = 0
@@ -99,7 +98,7 @@ class Player:
         self.size: int = size
 
     @property
-    def center(self) -> Tuple[int, int]:
+    def center(self):
         return (int(self.x + self.size // 2), int(self.y + self.size // 2))
 
     def launch(self, dx: float, dy: float, dist: float) -> None:
@@ -196,7 +195,7 @@ class GameUI:
 
     def draw_start_screen(self, screen: pg.Surface, button_rect: pg.Rect) -> None:
         screen.blit(self.start_bg_img, (0, 0))
-        title_text = self.title_font.render("ヤマダストライク", True, STAGE_BORDER)
+        title_text = self.title_font.render("簡易モンスト", True, STAGE_BORDER)
         title_rect = title_text.get_rect(center=(WIDTH // 2, HEIGHT // 3))
         screen.blit(title_text, title_rect)
         
@@ -215,7 +214,7 @@ class GameUI:
         screen.blit(self.ui_bg_img, (15, 600))
         pg.draw.line(screen, STAGE_BORDER, (10, 600), (WIDTH - 10, 600), 4)
 
-    def draw_bottom_ui_icons(self, screen: pg.Surface, chara_images: List[pg.Surface], current_turn: int, anyone_moving: bool, game_state: str, ss_ready: bool) -> None:
+    def draw_bottom_ui_icons(self, screen: pg.Surface, chara_images: list, current_turn: int, anyone_moving: bool, game_state: str, ss_ready: bool) -> None:
         """画面下のキャラクターアイコン群の描画を行います。
         
         SSが準備できている（ss_ready=True）ときは、手番に関わらずすべてのアイコンを金枠で囲います。
@@ -230,7 +229,7 @@ class GameUI:
             elif i == current_turn and not anyone_moving and game_state == "PLAY":
                 pg.draw.rect(screen, STAGE_BORDER, (x - 4, y - 4, 68, 68), 3)
 
-    def draw_guide_line(self, screen: pg.Surface, start_pos: Tuple[int, int], end_pos: Tuple[int, int], is_ss: bool) -> None:
+    def draw_guide_line(self, screen: pg.Surface, start_pos: tuple, end_pos: tuple, is_ss: bool) -> None:
         """引っ張り中のガイド線を描画します。
         
         SS発動時（is_ss=True）は、通常よりも太い金色の線でガイド線を描画します。
@@ -268,22 +267,22 @@ class Game:
     def __init__(self) -> None:
         pg.init()
         self.screen: pg.Surface = pg.display.set_mode((WIDTH, HEIGHT))
-        pg.display.set_caption("超簡易版モンスト(SSアノテーション版)")
+        pg.display.set_caption("超簡易版モンスト(SS標準アノテーション版)")
         self.clock: pg.time.Clock = pg.time.Clock()
         
         self.ui: GameUI = GameUI()
         
-        # --- 追加: SS管理マネージャーのインスタンス化 ---
+        # --- SS管理マネージャーのインスタンス化 ---
         self.ss_manager: StrikeShotManager = StrikeShotManager(requirement=3)
         
         self.start_button_rect: pg.Rect = pg.Rect(WIDTH // 2 - 100, HEIGHT // 2, 200, 60)
         
-        self.chara_images: List[pg.Surface] = [
+        self.chara_images: list = [
             pg.transform.scale(pg.image.load("chara1.jpg").convert_alpha(), (60, 60)),
             pg.transform.scale(pg.image.load("chara2.jpg").convert_alpha(), (60, 60)),
             pg.transform.scale(pg.image.load("chara3.png").convert_alpha(), (60, 60))
         ]
-        self.enemy_images: List[pg.Surface] = [
+        self.enemy_images: list = [
             pg.transform.scale(pg.image.load("enemy1.png").convert_alpha(), (70, 70)),
             pg.transform.scale(pg.image.load("enemy1.png").convert_alpha(), (70, 70)),
             pg.transform.scale(pg.image.load("enemy1.png").convert_alpha(), (70, 70))
@@ -294,19 +293,19 @@ class Game:
         self.reset_game()
 
     def reset_game(self) -> None:
-        self.players: List[Player] = [
+        self.players: list = [
             Player(120, 450, self.chara_images[0]),
             Player(195, 480, self.chara_images[1]),
             Player(270, 450, self.chara_images[2])
         ]
-        self.enemies: List[Enemy] = []
+        self.enemies: list = []
         self._spawn_enemies()
         
         self.current_turn: int = 0
         self.is_dragging: bool = False
         self.left_turns: int = 9
         
-        # --- 追加: マネージャーの初期化 ---
+        # --- マネージャーの初期化 ---
         self.ss_manager.reset()
 
     def _spawn_enemies(self) -> None:
@@ -319,8 +318,8 @@ class Game:
             self.enemies.append(Enemy(x, y, enemy_type, img, hp=5))
 
     def handle_events(self) -> None:
-        mouse_pos: Tuple[int, int] = pg.mouse.get_pos()
-        p: Optional[Player] = self.players[self.current_turn] if self.game_state == "PLAY" else None
+        mouse_pos: tuple = pg.mouse.get_pos()
+        p = self.players[self.current_turn] if self.game_state == "PLAY" else None
         anyone_moving: bool = any(pl.is_moving for pl in self.players)
 
         for event in pg.event.get():
@@ -348,13 +347,13 @@ class Game:
                 if event.type == pg.MOUSEBUTTONUP and self.is_dragging:
                     self.is_dragging = False
                     p_active: Player = self.players[self.current_turn]
-                    p_center: Tuple[int, int] = p_active.center
+                    p_center: tuple = p_active.center
                     dx: float = p_center[0] - mouse_pos[0]
                     dy: float = p_center[1] - mouse_pos[1]
                     dist: float = math.hypot(dx, dy)
                     
                     if dist > 5:
-                        # --- SS発動時は全員同時に launch させ、マネージャーをuse状態にする ---
+                        # --- SS発動時は全員同時に launch させ、マネージャーを消費(use)状態にする ---
                         if self.ss_manager.is_ready:
                             for pl in self.players:
                                 pl.launch(dx, dy, dist)
@@ -383,7 +382,7 @@ class Game:
                     if enemy.check_collision(player):
                         if enemy.hp <= 0:
                             self.enemies.remove(enemy)
-                            # --- 追加: 敵を撃破したタイミングでマネージャーをチャージする ---
+                            # --- 敵を撃破したタイミングでマネージャーをチャージする ---
                             self.ss_manager.charge()
 
         is_anyone_moving: bool = any(pl.is_moving for pl in self.players)
@@ -417,12 +416,12 @@ class Game:
                 
             if self.is_dragging and self.game_state == "PLAY":
                 p: Player = self.players[self.current_turn]
-                # --- 引数追加: ガイド線を金色にするかの判定 ---
+                # --- 引数追加: ガイド線を金色にするかの判定用フラグを渡す ---
                 self.ui.draw_guide_line(self.screen, p.center, pg.mouse.get_pos(), self.ss_manager.is_ready)
                 
             self.ui.draw_turn_count(self.screen, self.left_turns)
             
-            # --- 追加: SSマネージャー専用のステータス描画 ---
+            # --- 追加: SSマネージャー専用のステータス描画メソッドを呼ぶ ---
             self.ss_manager.draw_status(self.screen)
             
             self.ui.draw_result_screen(self.screen, self.game_state)
