@@ -637,6 +637,8 @@ class Game:
             ):
 
                 self.turn_processed = True
+                self.triggered_allies.clear()
+                self.touching_allies.clear()
 
                 # ターン進行
                 self.left_turns -= 1
