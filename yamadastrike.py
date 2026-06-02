@@ -244,7 +244,7 @@ class BossEnemy(Enemy):
     Bossクラスの追加。レーザーの描画調整、効果の追加。
     """
     def __init__(self, x, y, image):
-        super().__init__(x, y, enemy_type="BOSS", image=image, size=120, hp=80)
+        super().__init__(x, y, enemy_type="BOSS", image=image, size=120, hp=70)
         self.laser_cooldown = 0
         self.laser_counter = 0
         self.show_laser = False
@@ -287,6 +287,7 @@ class item:
         self.image = image
         self.x = x
         self.y = y
+        self.size = 50
         self.is_used = False
     
     def use(self, game_instance):
@@ -297,13 +298,21 @@ class item:
             return True
         return False
     
+    def check_collision(self, player) -> bool:
+        if not self.is_used:
+            # アイテムの四角形とプレイヤーの四角形が重なっているか判定
+            if (self.x < player.x + player.size and 
+                player.x < self.x + self.size and
+                self.y < player.y + player.size and
+                player.y < self.y + self.size):
+                return True
+        return False
+    
     def draw(self, screen):
         """未使用の場合のみ画面に描画"""
         if not self.is_used:
             screen.blit(self.image, (self.x, self.y))
     
-        
-
 
 class Bullet:
     """味方から発射される十字弾のクラス"""
@@ -466,9 +475,12 @@ class Game:
         boss_y = 200
         self.enemies.append(BossEnemy(boss_x, boss_y, self.boss_image))
 
-        # 追加機能変更点　ゲームリセット時にアイテムのインスタンスを作成（画面右下に位置するように）
-        self.game_item = item(self.item_image, 380, 645)
-        
+        # 追加機能変更点　ゲームリセット時にアイテムのインスタンスを作成（画面ランダムに位置するように）
+        # self.game_item = item(self.item_image, 380, 645)
+        item_x = random.randint(30, WIDTH - 80)
+        item_y = random.randint(50, 450)
+        self.game_item = item(self.item_image, item_x, item_y)
+
         self.bullets = []  # 画面上の弾のリスト
         self.triggered_allies = set()  # 友情発動済み
         self.touching_allies = set()   # 接触中の味方ペア
@@ -526,9 +538,9 @@ class Game:
 
             elif self.game_state == "PLAY":
                 # 追加機能変更点スペースキーが押されたらアイテムを使う
-                if event.type == pg.KEYDOWN:
-                    if event.key == pg.K_SPACE:
-                        self.game_item.use(self)
+                # if event.type == pg.KEYDOWN:
+                #     if event.key == pg.K_SPACE:
+                #         self.game_item.use(self)
 
                 # 引っ張り開始判定
                 if event.type == pg.MOUSEBUTTONDOWN and not anyone_moving:
@@ -627,6 +639,8 @@ class Game:
                         else:
                             if pair in self.touching_allies:
                                 self.touching_allies.remove(pair)
+                if self.game_item.check_collision(player):
+                    self.game_item.use(self) # 接触したらその場でターン数+1＆消滅
 
             # 全員停止した瞬間に1回だけターン処理
             if (
